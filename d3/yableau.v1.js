@@ -7,6 +7,9 @@ var yabPadding = {top:30, left: 50, right: 20, bottom: 20};
 
 console.log("yableau init.");
 
+var formatNumber = d3.format(",.0f"),    // zero decimal places
+	format = function(d) { return formatNumber(d); };
+		
 function getFilterById(divId, filters){
 	for (var i=0; i<filters.length; i++) {
 		if (filters[i].divId == divId) return i;
@@ -253,16 +256,22 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 		.selectAll("text.bar")
 		.data(dataset)
 		.text(function(d) {
-			return d.y;
+			return format(d.y);
 		})
-		.attr("text-anchor", "end")
 		.transition().duration(duration)
 		.attr("y", function(d,i) {
 			return yScale(i)+yScale.rangeBand()/2+5;
 		})
 		.attr("x", function(d, i) {
 			var x = xScale(d.y);
-			return x + (x < width/2 ? 20 : -25);
+			if (x<width/2){
+				d3.select(this).attr("text-anchor", "start");
+				x = x + 5;
+			}else{
+				d3.select(this).attr("text-anchor", "end");
+				x = x - 5;
+			}
+			return x;
 		})
 		.attr("fill", function(d, i) {
 			return xScale(d.y) < width/2 ? "#444" : "#fff";
@@ -435,7 +444,7 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 		.selectAll("text.bar")
 		.data(dataset)
 		.text(function(d) {
-			return d.y;
+			return format(d.y);
 		})
 		.attr("text-anchor", "middle")
 		.transition().duration(duration)
@@ -635,13 +644,14 @@ yableau.map = function(divId, origData, xField, yField, param, attr){
 		.selectAll("text")
 		.data(features)
 		.text(function(d,i){return d.properties.name;})
+		.attr("text-anchor", "middle")
 		.attr("x",function(d){
 			//return d.properties.position[0];
 			return projection([d.properties.cp[0], d.properties.cp[1]])[0];
 		})
 		.attr("y",function(d){
 			//return d.properties.position[1];
-			return projection([d.properties.cp[0], d.properties.cp[1]])[1];
+			return projection([d.properties.cp[0], d.properties.cp[1]])[1]+5;
 		});
 
 	function zoomed() {
@@ -730,7 +740,7 @@ yableau.pie = function(divId, origData, xField, yField, param, attr){
 				.attr("text-anchor","middle")
 				.text(function(){
 					if (d.endAngle - d.startAngle < 3.1416/12) return ""; // less than 15deg, show nothing.
-					return d.label + " " + d.value;
+					return d.label + " " + format(d.value);
 				});
 			
 			var fIdx = getFilterById(divId, param.filters);
@@ -752,7 +762,7 @@ yableau.pie = function(divId, origData, xField, yField, param, attr){
 			}
 		})
 		.on("mouseover",function(d,i){
-			showTip(this, d.label + "<br>" + d.value);
+			showTip(this, "<b>" + d.label + "</b><br>" + format(d.value));
 			if (getFilterById(divId, param.filters) >= 0) return;
 			d3.select(this).select("path")
 				.attr("fill", attr.mouseoverColor);
@@ -789,127 +799,195 @@ yableau.sankey = function(divId, origData, xField, yField, param, attr){
 	if (!attr.mouseoverColor) attr.mouseoverColor = "blue";
 	if (!attr.mouseoutColor)  attr.mouseoutColor  = "green";
 	
-	var dataset=buildData(divId, origData, xField, yField, param);
-	
-	// data is ready, now draw.
-	var outerRadius = width / 2 - 30;
-	var innerRadius = width / 4 - 30;
-
-	var svg = d3.select(divId).select("svg");
-	if (!d3.select(divId).attr("svg")) {
-		d3.select(divId).attr("svg", "yes");
-		svg = d3.select(divId)
-				.append("svg")
-				.attr("width", width)
-				.attr("height", height);
-
-		svg.append("rect")
-			.attr("class", "bgRect")
-			.attr("x",0)
-			.attr("y",0)
-			.attr("width",width)
-			.attr("height",height)
-			.style("fill","#FFF")
-			.style("stroke-width",2)
-			.style("stroke","#ccc");
-
-		svg.append("g")
-			.attr("class", "paths")
-			.attr("transform","translate(" + (outerRadius+30) + "," + (outerRadius+30) + ")");
-		svg.append("g")
-			.attr("class", "texts")
-			.attr("transform","translate(" + (outerRadius+30) + "," + (outerRadius+30) + ")");
-			
-	}
-	
-	//dataset.push({x:"noname", y:1});
-		
-	var pie = d3.layout.pie();
-		
-	var data = [];
-	dataset.forEach(function(d){
-		data.push(d.y);
-	});
-	
-	var ddd = pie(data);
-	for(var i=0; i<data.length; i++){
-		ddd[i].label = dataset[i].x;
-		ddd[i].color = color(i);
-	}	
-	
-
-	var arc = d3.svg.arc()
-					.innerRadius(innerRadius)
-					.outerRadius(outerRadius);
-		
-	var gPath = svg.select("g.paths");
-	gPath.selectAll("path")
-		.data(ddd)
-		.enter()
-		.append("path");
-	
-	gPath.selectAll("path")
-		.data(ddd)
-		.attr("d",function(d, i){
-			console.log(i);
-			return arc(d);
-		})
-		.attr("fill",function(d,i){
-			return color(i);
-		})
-	.each(function(d,i){
-		var fIdx = getFilterById(divId, param.filters);
-		if (fIdx >= 0 && param.filters[fIdx].value == d.label) {
-			d3.select(this).attr({'fill': attr.mouseoverColor, 'stroke-width': 1, 'stroke': "#444"});
-			d3.select(this)
-				.transition().duration(duration)
-				.attr("transform","translate(" + Math.sin((d.startAngle+d.endAngle)/2)*20 + "," 
-											   + Math.cos((d.startAngle+d.endAngle)/2)*(-20) + ")");
-		}else{
-			d3.select(this).attr({'fill': color(i), 'stroke-width': 1, 'stroke': "#ddd"});
-			d3.select(this)
-				//.transition().duration(duration)
-				.attr("transform","translate(" + 0 + "," + 0 + ")");
+	// filter data.
+	var newData = [];
+	for(var i=0; i<origData.length; i++) {
+		var fIdx = param.filters.length; // if no own filter found, use all filters.
+		var match = true;
+		for (var f=0; f<fIdx; f++) {
+			if (origData[i][param.filters[f].xField] != param.filters[f].value) {
+				match = false;
+				break;
+			}
 		}
-	})
-	.on("mouseover",function(d,i){
-		if (getFilterById(divId, param.filters) >= 0) return;
-		d3.select(this)
-			.attr("fill", attr.mouseoverColor);
-	})
-	.on("mouseout",function(d,i){
-		if (getFilterById(divId, param.filters) >= 0) return;
-		d3.select(this)
-			.attr("fill", color(i));
-	})
-	.on("click", function(d,i){
-		doFilter(this, divId, param, origData, xField, d.label);
+		if (match == false) continue; 
+		newData.push(origData[i]);
+	}
+
+	// data conversion.
+	var data = [];
+	xField.forEach(function(d){  // xField is from-to pairs
+		var source = d.from;
+		var target = d.to;
+		
+		newData.forEach(function(d2){
+			var value  = +d2[yField];
+			for (var i=0; i<data.length; i++) {
+				if (data[i].source == d2[source] && data[i].target == d2[target]){
+					data[i].value += value;
+					//console.log(i + ": " + data[i].value);
+					return;
+				}
+			}
+			data.push({source: d2[source], target: d2[target], value: value});
+		});
+	});	
+	//console.log(data);
+
+	var vMax = d3.max(data, function(d){return d.value;});
+//	console.log(String(vMax).length);
+
+	// use log scale for small values.
+	vScale = d3.scale.log()
+				.domain([1, vMax])
+				.range([1, height/3]);
+	data.forEach(function(d){
+		d.showValue = d.value;     // keep for display.
+		d.value = vScale(d.value);
 	});
 	
-	gPath.selectAll("path")
-		.data(ddd)
-		.exit()
-		.remove();
-
-	var gText = svg.select("g.texts");
-	gText.selectAll("text")
-		.data(ddd)
-		.enter()
-		.append("text");
 	
-	gText.selectAll("text")
-		.data(ddd)
-		.attr("transform",function(d){
-			return "translate(" + arc.centroid(d) + ")";
-		})
-		.attr("text-anchor","middle")
-		.text(function(d, i){
-			return d.label + " " + d.value;
-		});
-	gText.selectAll("text")
-		.data(ddd)
-		.exit()
-		.remove();
+	// change names if source target has same name, avoid dead loop.
+	var nameConflictCnt = 0;
+	do {
+		nameConflictCnt = 0;
+		for (var it=0; it<data.length; it++){
+			for (var is=0; is<data.length; is++){
+				if (data[it].target == data[is].source /*&& data[it].source == data[is].target*/) {
+					data[it].target += "_";
+					nameConflictCnt++;
+					console.log(nameConflictCnt + ": " + data[it].target);
+				}
+			}
+		}
+	}while (nameConflictCnt);
+		
+	d3.select(divId).select("svg").remove();  // delete and redraw.
+
+
+	//-------------------------------------------------------------------------
+	var units = attr.units ? attr.units : "Msg";
+
+	var formatNumber = d3.format(",.0f"),    // zero decimal places
+		format = function(d) { return formatNumber(d) + " " + units; },
+		color = d3.scale.category20();
+
+	// append the svg canvas to the page
+	var svg = d3.select(divId).append("svg")
+				.attr("width", width)
+				.attr("height", height)
+			  .append("g")
+				.attr("transform", 
+					  "translate(" + padding.left + "," + padding.top + ")");
+
+	// Set the sankey diagram properties
+	var sankey = d3.sankey()
+					.nodeWidth(36)
+					.nodePadding(10)
+					.size([width-padding.left-padding.right, height-padding.top-padding.bottom]);
+
+	var path = sankey.link();
+
+  
+	//set up graph in same style as original example but empty
+	graph = {"nodes" : [], "links" : []};
+
+	data.forEach(function (d) {
+		graph.nodes.push({ "name": d.source });
+		graph.nodes.push({ "name": d.target });
+		graph.links.push({ "source": d.source,
+							"target": d.target,
+							"value": +d.value, "showValue": d.showValue });
+	});
+
+	// return only the distinct / unique nodes
+	graph.nodes = d3.keys(d3.nest()
+					  .key(function (d) { return d.name; })
+					  .map(graph.nodes));
+
+	// loop through each link replacing the text with its index from node
+	graph.links.forEach(function (d, i) {
+		graph.links[i].source = graph.nodes.indexOf(graph.links[i].source);
+		graph.links[i].target = graph.nodes.indexOf(graph.links[i].target);
+	});
+
+	//now loop through each nodes to make nodes an array of objects
+	// rather than an array of strings
+	graph.nodes.forEach(function (d, i) {
+		graph.nodes[i] = { "name": d };
+	});
+
+	sankey
+		.nodes(graph.nodes)
+		.links(graph.links)
+		.layout(32);
+
+	// add in the links
+	var link = svg.append("g").selectAll(".link")
+					.data(graph.links)
+					.enter().append("path")
+					.attr("class", "link")
+					.attr("d", path)
+					.style("stroke-width", function(d) { return Math.max(1, d.dy); })
+					.sort(function(a, b) { return b.dy - a.dy; })
+					.on("mouseover", function(d){
+					  showTip(this, d.source.name + " → " + d.target.name + "<br>" + format(d.showValue))
+				    })
+				    .on("mouseout", hideTip);
+
+	// add in the nodes
+	var node = svg.append("g").selectAll(".node")
+				  .data(graph.nodes)
+				.enter().append("g")
+				  .attr("class", "node")
+				  .attr("transform", function(d) { 
+					  return "translate(" + d.x + "," + d.y + ")"; })
+				.call(d3.behavior.drag()
+				  .origin(function(d) { return d; })
+				  .on("dragstart", function() { 
+					  this.parentNode.appendChild(this); })
+				  .on("drag", dragmove));
+
+	// add the rectangles for the nodes
+	node.append("rect")
+		  .attr("height", function(d) { 
+				if (d.dy < 0){
+					console.log(d);
+				}
+				if (d.dy < 5) return 5;
+				return d.dy; 
+			})
+		  .attr("width", sankey.nodeWidth())
+		  .style("fill", function(d) { 
+			  return d.color = color(d.name.replace(/ .*/, "")); })
+		  .style("stroke", function(d) { 
+			  return d3.rgb(d.color).darker(2); })
+		  .on("mouseover", function(d){
+			  showTip(this, d.name + "<br>" + format(d.showValue))
+		  })
+		  .on("mouseout", hideTip);
+
+	// add in the title for the nodes
+	node.append("text")
+		  .attr("x", -6)
+		  .attr("y", function(d) { return d.dy / 2; })
+		  .attr("dy", ".35em")
+		  .attr("text-anchor", "end")
+		  .attr("transform", null)
+		  .text(function(d) { return d.name; })
+		.filter(function(d) { return d.x < (width-padding.left-padding.right) / 2; })
+		  .attr("x", 6 + sankey.nodeWidth())
+		  .attr("text-anchor", "start");
+
+	// the function for moving the nodes
+	function dragmove(d) {
+		d3.select(this).attr("transform", 
+			"translate(" + d.x + "," + (
+					d.y = Math.max(0, Math.min((height-padding.top-padding.bottom) - d.dy, d3.event.y))
+				) + ")");
+		sankey.relayout();
+		link.attr("d", path);
+	  }
 		
 } // yableau.sankey()
 

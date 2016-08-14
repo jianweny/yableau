@@ -1,0 +1,63 @@
+/*CSS for D3.*/
+svg text {
+	pointer-events: none;
+	font-size: 11px;
+}
+
+path.domain {
+	fill: none;
+	stroke: black;
+	stroke-width:1;
+	shape-rendering: crispEdges;
+}
+.tick.major line {
+	stroke: #888;
+	stroke-width:1;
+	shape-rendering: crispEdges;
+}
+
+
+/* for Sankey */
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+}
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
+.link:hover {
+  stroke-opacity: .5;
+}	
+#tooltip.hidden {
+	display: none;
+}
+
+/* for tootip */
+
+#tooltip {
+	position: absolute;
+	width: 100px;
+	height: auto;
+	padding: 10px;
+	background-color: white;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+}
+#tooltip p {
+	margin: 0;
+	font-family: sans-serif;
+	font-size: 14px;
+	line-height: 20px;
+}
