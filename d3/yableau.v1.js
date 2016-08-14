@@ -843,7 +843,7 @@ yableau.sankey = function(divId, origData, xField, yField, param, attr){
 
 	var nodes = []; // nodes = [{name: "name", children: []}, {}, {}]
 	for (var i=0; i<data.length; i++) {
-		console.log(i);
+		//console.log(i);
 		var d = seekInNodes(nodes, data[i].source);
 		if (d == undefined){
 			var child = {name: data[i].target, value: data[i].value, children: []};
@@ -885,7 +885,12 @@ yableau.sankey = function(divId, origData, xField, yField, param, attr){
 	});
 	function popNewData(node, level) {
 		node.children.forEach(function(child){
-			newData.push({source: (node.name + "_" + level), target: (child.name + "_" + (level+1)), value: child.value});
+			var v = {source: (node.name + "_" + level), target: (child.name + "_" + (level+1)), value: child.value};
+			if (isNaN(child.value)) {
+				console.log(v);
+			}else{
+				newData.push(v);
+			}
 			popNewData(child, level+1);
 		});
 	}
