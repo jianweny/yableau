@@ -3,11 +3,7 @@
 	<meta charset="utf-8">  
 	<title>yableau demo</title>  
 	<style>
-	svg text {
-		text-anchor: middle;
-		pointer-events: none;
-		font-size: 11px;
-	}
+
 
 	#Container{
 		width:1200px;
@@ -33,7 +29,7 @@
 
 	/*注：Content-Left和Content-Main元素是Content元素的子元素，两个元素使用了float:left;设置成两列，这个两个元素的宽度和这个两个元素设置的padding、margin的和一定不能大于父层Content元素的宽度，否则设置列将失败*/
 	#Footer{
-		height:40px;
+		height:450px;
 		background:#ddd;
 		margin-top:20px;
 	}
@@ -44,6 +40,13 @@
 	#test1, #test2, #test3, #test4, #test5{
 		height:240px;
 		width:220px;
+		margin:10px;/*设置元素跟其他元素的距离为20像素*/
+		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
+		background:#eee;
+	}
+	#test6, #test7{
+		height:400px;
+		width:400px;
 		margin:10px;/*设置元素跟其他元素的距离为20像素*/
 		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
 		background:#eee;
@@ -65,7 +68,12 @@
 		background:#eee;
 	}
 
-	
+	svg text {
+		text-anchor: middle;
+		pointer-events: none;
+		font-size: 11px;
+	}
+
 	path.domain {
 		fill: none;
 		stroke: black;
@@ -106,7 +114,10 @@
         <div id="Content-Main" class="group1">　rsp_city</div>
     </div>
     <div class="Clear"><!--如何你上面用到float,下面布局开始前最好清除一下。--></div>
-    <div id="Footer">注：演示！</div>
+    <div id="Footer">
+		<div id="test6" class="group1">　req_dev_manufacturer</div>
+		<div id="test7" class="group1">　req_city</div>
+	</div>
         
 </div>
 
@@ -120,9 +131,9 @@
 d3.select("#D3IE").remove();
 
 var mapInfo = {jsonUrl: "geoJsons/jiangsu.json", center:[119.2, 33], scale:23000};
-var param = {sortBy:"D", xType: "ordinal", xDirection:"virtical", mapInfo: mapInfo, filters:[]};
+var param = {sortType: /*a|d*/ "d", xType: "ordinal", xDirection: /*right|down*/"right", mapInfo: mapInfo, filters:[]};
 
-var appidAttr = {padding: {top:30, left: 70, right: 20, bottom: 20}};
+var appidAttr = {padding: {top:30, left: 70, right: 20, bottom: 20}, mouseoverColor: "red", mouseoutColor: "pink"};
 
 var charts = [
 				{type : "map",
@@ -167,6 +178,20 @@ var charts = [
 				 x    : "rsp_dev_type",
 				 y    : "Total",
 				 param : param},
+
+
+				{type : "column",
+				 div  : "#test6",
+				 x    : "rsp_city",
+				 y    : "Total",
+				 param : param},
+					 
+				{type : "pie",
+				 div  : "#test7",
+				 x    : "req_city",
+				 y    : "Total",
+				 param : param},
+
 				 
 				{type : "bar",
 				 div  : "#Leftbar",
