@@ -2,6 +2,7 @@
   <head>  
 	<meta charset="utf-8">  
 	<title>yableau demo</title>  
+
 	<style>
 
 
@@ -44,13 +45,29 @@
 		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
 		background:#eee;
 	}
-	#test6, #test7{
+	#test6{
 		height:400px;
 		width:400px;
 		margin:10px;/*设置元素跟其他元素的距离为20像素*/
 		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
 		background:#eee;
 	}
+	#test7{
+		height:400px;
+		width:500px;
+		margin:10px;/*设置元素跟其他元素的距离为20像素*/
+		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
+		background:#eee;
+	}
+	#test8{
+		height:500px;
+		width:800px;
+		margin:10px;/*设置元素跟其他元素的距离为20像素*/
+		float:left;/*设置浮动，实现多列效果，div+Css布局中很重要的*/
+		background:#eee;
+	}
+
+
 	#Content-Left,#Content-Main{
 		height:350;
 		width:398px;
@@ -68,27 +85,13 @@
 		background:#eee;
 	}
 
-	svg text {
-		text-anchor: middle;
-		pointer-events: none;
-		font-size: 11px;
-	}
-
-	path.domain {
-		fill: none;
-		stroke: black;
-		stroke-width:1;
-		shape-rendering: crispEdges;
-	}
-	.tick.major line {
-		stroke: #888;
-		stroke-width:1;
-		shape-rendering: crispEdges;
-	}
-	
 	</style>
 </head> 
 <body>
+
+		<div id="tooltip" class="hidden">
+			<p><span id="title"></span></p>
+		</div>
 
 <div id="Container"><h1 id="D3IE"><a href=d3/D3-in-IE-NOK-solution.png>急！！！为啥俺看不到图形效果？</a></h1>
     <div id="Header">
@@ -118,6 +121,7 @@
 		<div id="test6" class="group1">　req_dev_manufacturer</div>
 		<div id="test7" class="group1">　req_city</div>
 	</div>
+		<div id="test8" class="group1">　Sankey diagram</div>
         
 </div>
 
@@ -125,6 +129,8 @@
 <script src="d3/d3.v3.js"></script>
 <script src="d3/jquery-2.2.3.min.js"></script>
 <script src="d3/yableau.v1.js"></script>
+<script src="d3/sankey.js"></script>
+<link rel="stylesheet" type="text/css" href="d3/yableau.v1.css" />
 
 <script>
 
@@ -134,6 +140,13 @@ var mapInfo = {jsonUrl: "geoJsons/jiangsu.json", center:[119.2, 33], scale:23000
 var param = {sortType: /*a|d*/ "d", xType: "ordinal", xDirection: /*right|down*/"right", mapInfo: mapInfo, filters:[]};
 
 var appidAttr = {padding: {top:30, left: 70, right: 20, bottom: 20}, mouseoverColor: "red", mouseoutColor: "pink"};
+
+var fromToPairs = [	{from: "req_city", to: "rsp_city"},
+					{from: "req_dev_type", to: "rsp_dev_type"}
+					];
+
+var sankeyAttr = {padding: {top:20, left: 10, right: 10, bottom: 20}};
+
 
 var charts = [
 				{type : "map",
@@ -203,7 +216,14 @@ var charts = [
 				 div  : "#Mainbar",
 				 x    : "rsp_city",
 				 y    : "Total",
-				 param : param}
+				 param : param},
+				 
+				{type : "sankey",
+				 div  : "#test8",
+				 x    : fromToPairs,
+				 y    : "Total",
+				 param : param,
+				 attr : sankeyAttr},
 			];
 
 
