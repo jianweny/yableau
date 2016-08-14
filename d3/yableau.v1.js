@@ -834,8 +834,70 @@ yableau.sankey = function(divId, origData, xField, yField, param, attr){
 	});	
 	//console.log(data);
 
+
+	
+	//**********************************************************************
+	// unfortunately their are often dead loops, which cause browers dead!. 
+	// To avoid them, I have to level sources and destinations.
+	//**********************************************************************
+
+	var nodes = []; // nodes = [{name: "name", children: []}, {}, {}]
+	for (var i=0; i<data.length; i++) {
+		console.log(i);
+		var d = seekInNodes(nodes, data[i].source);
+		if (d == undefined){
+			var child = {name: data[i].target, value: data[i].value, children: []};
+			nodes.push({name: data[i].source, children: [child]});
+		}else{
+			var found = 0;
+			for (var k=0; k<d.children.length; k++){
+				if(d.children[k].name == data[i].target){
+					d.children[k].value += +data[i].value;
+					found = 1;
+				}
+			}
+			if (found == 0){
+				var child = {name: data[i].target, value: data[i].value, children: []};
+				d.children.push(child);
+			}
+		}
+	}
+	
+	function seekInNodes(nodesToSeek, name){
+		for (var i=0; i<nodesToSeek.length; i++){
+			if (nodesToSeek[i].name == name) {
+				return nodesToSeek[i];
+			}
+		}
+		for (var i=0; i<nodesToSeek.length; i++){
+			var r = seekInNodes(nodesToSeek[i].children, name);
+			if (r) return r;
+		}
+		return undefined;
+	}
+	
+	//console.log(nodes);
+	
+	var level = 1;
+	newData = [];
+	nodes.forEach(function(node){
+		popNewData(node, level);
+	});
+	function popNewData(node, level) {
+		node.children.forEach(function(child){
+			newData.push({source: (node.name + "_" + level), target: (child.name + "_" + (level+1)), value: child.value});
+			popNewData(child, level+1);
+		});
+	}
+	
+	//console.log(newData);
+
+	//**********************************************************************
+	// DONE!
+	//**********************************************************************
+		
+	data = newData;
 	var vMax = d3.max(data, function(d){return d.value;});
-//	console.log(String(vMax).length);
 
 	// use log scale for small values.
 	vScale = d3.scale.log()
@@ -846,21 +908,7 @@ yableau.sankey = function(divId, origData, xField, yField, param, attr){
 		d.value = vScale(d.value);
 	});
 	
-	
-	// change names if source target has same name, avoid dead loop.
-	var nameConflictCnt = 0;
-	do {
-		nameConflictCnt = 0;
-		for (var it=0; it<data.length; it++){
-			for (var is=0; is<data.length; is++){
-				if (data[it].target == data[is].source /*&& data[it].source == data[is].target*/) {
-					data[it].target += "_";
-					nameConflictCnt++;
-					console.log(nameConflictCnt + ": " + data[it].target);
-				}
-			}
-		}
-	}while (nameConflictCnt);
+
 		
 	d3.select(divId).select("svg").remove();  // delete and redraw.
 
