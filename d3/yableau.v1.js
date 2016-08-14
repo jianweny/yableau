@@ -2,6 +2,7 @@ yableau = function() {
 	
 var yableau = {version: "1.0.0"};
 var color = d3.scale.category20();
+var duration = 250;
 var yabPadding = {top:30, left: 50, right: 20, bottom: 20};
 
 console.log("yableau init.");
@@ -25,6 +26,28 @@ function doFilter(domId, divId, param, origData, xField, value) {
 	}
 }
 
+
+function showTip(o, c){
+	var oRect = o.getBoundingClientRect();
+    x = document.body.scrollLeft + (oRect.left + oRect.width /2);
+    y = document.body.scrollTop  + (oRect.top  + oRect.height/2);
+
+	//Update the tooltip position and content
+	d3.select("#tooltip")
+		.style("left", x + "px")
+		.style("top", y + "px")						
+		.select("#title")
+		.html(c);
+
+	//Show the tooltip
+	d3.select("#tooltip").classed("hidden", false);
+}
+
+function hideTip(){
+	//Hide the tooltip
+	d3.select("#tooltip").classed("hidden", true);
+}
+					
 //------------------------------------------------------------------------------------------
 function buildData(divId, origData, xField, yField, param){
 	var dataset=[];
@@ -162,7 +185,11 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 		.data(dataset)
 		.enter()
 		.append("rect")
-		.attr("class", "bar");
+		.attr("class", "bar")
+		.attr("x",padding.left)
+		.attr("y",function(d, i) {
+				return yScale(i);
+		});
 		
 	svg.select("g.rects")
 		.selectAll("rect.bar")
@@ -173,10 +200,6 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 	svg.select("g.rects")
 		.selectAll("rect.bar")
 		.data(dataset)
-		.attr("x",padding.left)
-		.attr("y",function(d, i) {
-				return yScale(i);
-		})
 		.each(function(d,i){
 			var fIdx = getFilterById(divId, param.filters);
 			if (fIdx >= 0 && param.filters[fIdx].value == d.x) {
@@ -201,9 +224,11 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 		.attr("height",function(d, i) {
 			return yScale.rangeBand();
 		})
-		.transition()
-		.duration(2000)
-		.attr("width",function(d, i) {
+		.transition().duration(duration)
+		.attr("x",padding.left)
+		.attr("y",function(d, i) {
+				return yScale(i);
+		})		.attr("width",function(d, i) {
 			return xScale(d.y) - xScale(0);
 		});
 		
@@ -213,7 +238,10 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 		.enter()
 		.append("text")
 		.attr("class", "bar")
-		.attr("x", xScale(0)+20);
+		.attr("x", xScale(0)+20)
+		.attr("y", function(d,i) {
+			return yScale(i)+yScale.rangeBand()/2+5;
+		})
 
 	svg.select("g.texts")
 		.selectAll("text.bar")
@@ -228,11 +256,10 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 			return d.y;
 		})
 		.attr("text-anchor", "end")
+		.transition().duration(duration)
 		.attr("y", function(d,i) {
 			return yScale(i)+yScale.rangeBand()/2+5;
 		})
-		.transition()
-		.duration(2000)
 		.attr("x", function(d, i) {
 			var x = xScale(d.y);
 			return x + (x < width/2 ? 20 : -25);
@@ -244,15 +271,20 @@ yableau.bar = function(divId, origData, xField, yField, param, attr){
 	//Create X axis
 	svg.select("g.xAxis")
 		.attr("transform", "translate(0, " + padding.top + ")")
+		.transition().duration(duration)
 		.call(xAxis);
 
 	//Create Y axis
 	svg.select("g.yAxis")
 		.attr("transform", "translate(" + padding.left + ",0)")
-		.call(yAxis)
+		.transition().duration(duration)
+		.call(yAxis);
+	svg.select("g.yAxis")
 		.selectAll("text")
+		.data(dataset)
+		.transition().duration(duration)
 		.text(function(d,i){
-			return dataset[i].x;
+			return d.x;
 		});
 		
 } // yableau.bar()
@@ -330,6 +362,9 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 		.enter()
 		.append("rect")
 		.attr("class", "bar")
+		.attr("x",function(d, i) {
+				return xScale(i);
+		})
 		.attr("y", yScale(0))
 		.attr("height", 0);
 		
@@ -342,9 +377,6 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 	svg.select("g.rects")
 		.selectAll("rect.bar")
 		.data(dataset)
-		.attr("x",function(d, i) {
-				return xScale(i);
-		})
 		.each(function(d){
 			var fIdx = getFilterById(divId, param.filters);
 			if (fIdx >= 0 && param.filters[fIdx].value == d.x) {
@@ -369,8 +401,10 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 		.attr("width",function(d) {
 			return xScale.rangeBand();
 		})
-		.transition()
-		.duration(2000)
+		.transition().duration(duration)
+		.attr("x",function(d, i) {
+				return xScale(i);
+		})
 		.attr("y", function(d) {
 			return yScale(d.y);
 		})
@@ -383,7 +417,13 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 		.data(dataset)
 		.enter()
 		.append("text")
-		.attr("class", "bar");
+		.attr("class", "bar")
+		.attr("x", function(d,i) {
+			return xScale(i)+xScale.rangeBand()/2+5;
+		})
+		.attr("y", function(d,i){
+			return yScale(0);
+		});
 
 	svg.select("g.texts")
 		.selectAll("text.bar")
@@ -398,15 +438,10 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 			return d.y;
 		})
 		.attr("text-anchor", "middle")
+		.transition().duration(duration)
 		.attr("x", function(d,i) {
 			return xScale(i)+xScale.rangeBand()/2+5;
 		})
-		.attr("y", function(d,i){
-			if (!d3.select(this).attr("y")) return yScale(0);
-			return yScale(d.y);
-		})
-		.transition()
-		.duration(2000)
 		.attr("y", function(d) {
 			return yScale(d.y);
 		})
@@ -414,13 +449,17 @@ yableau.column = function(divId, origData, xField, yField, param, attr){
 	//Create Y axis
 	svg.select("g.yAxis")
 		.attr("transform", "translate(" + padding.left + ",0)")
+		.transition().duration(duration)
 		.call(yAxis);
 
 	//Create X axis
 	svg.select("g.xAxis")
 		.attr("transform", "translate(0, " + (height - padding.bottom) + ")")
-		.call(xAxis)
-		.selectAll("g.xAxis text")
+		.transition().duration(duration)
+		.call(xAxis);
+	svg.selectAll("g.xAxis text")
+		.data(dataset)
+		.transition().duration(duration)
 		.text(function(d,i){
 			return dataset[i].x;
 		});
@@ -569,7 +608,7 @@ yableau.map = function(divId, origData, xField, yField, param, attr){
 		.on("click", function(d,i){
 			doFilter(this, divId, param, origData, xField, d.properties.name);
 		})
-		.transition()
+		.transition().duration(duration)
 		.attr("r", function(d) {
 			var y = 0;
 			dataset.forEach(function(c,i){
@@ -610,11 +649,136 @@ yableau.map = function(divId, origData, xField, yField, param, attr){
 	}
 } // yableau.map()
 
+
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 console.log("define yableau.pie");
 
 yableau.pie = function(divId, origData, xField, yField, param, attr){
+
+	var width  = parseInt(d3.select(divId).style("width"));
+	var height = parseInt(d3.select(divId).style("height"));
+	
+	var attr  = attr ? attr : [];
+	var padding = attr.padding ? attr.padding : yabPadding;
+	
+	if (!attr.mouseoverColor) attr.mouseoverColor = "blue";
+	if (!attr.mouseoutColor)  attr.mouseoutColor  = "green";
+	
+	var dataset=buildData(divId, origData, xField, yField, param);
+	
+	// data is ready, now draw.
+	var outerRadius = d3.min([width, height]) / 2 - 30;
+	var innerRadius = d3.min([width, height]) / 4 - 30;
+
+	var svg = d3.select(divId).select("svg");
+	if (!d3.select(divId).attr("svg")) {
+		d3.select(divId).attr("svg", "yes");
+		svg = d3.select(divId)
+				.append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+		svg.append("rect")
+			.attr("class", "bgRect")
+			.attr("x",0)
+			.attr("y",0)
+			.attr("width",width)
+			.attr("height",height)
+			.style("fill","#FFF")
+			.style("stroke-width",2)
+			.style("stroke","#ccc");
+	}
+			
+	var pie = d3.layout.pie();
+		
+	var data = [];
+	dataset.forEach(function(d){
+		data.push(d.y);
+	});
+	
+	var ddd = pie(data);
+	for(var i=0; i<data.length; i++){
+		ddd[i].label = dataset[i].x;
+		ddd[i].color = color(i);
+	}	
+	
+	var arc = d3.svg.arc()
+					.innerRadius(innerRadius)
+					.outerRadius(outerRadius);
+
+	var arcs = svg.selectAll("g")
+					.data(ddd)
+					.enter()
+					.append("g")
+					.attr("transform","translate(" + (outerRadius+30) + "," + (outerRadius+30) + ")");
+					
+	arcs.append("path");
+	arcs.append("text");
+	
+	svg.selectAll("g")
+		.data(ddd)
+		.each(function(d,i){
+			d3.select(this)
+				.select("path")
+				//.transition().duration(duration) // Errors to be fixed.
+				.attr("d", arc(d))
+				.attr("fill", color(i));
+			d3.select(this)
+				.select("text")
+				.attr("transform", "translate(" + arc.centroid(d) + ")")
+				.attr("text-anchor","middle")
+				.text(function(){
+					if (d.endAngle - d.startAngle < 3.1416/12) return ""; // less than 15deg, show nothing.
+					return d.label + " " + d.value;
+				});
+			
+			var fIdx = getFilterById(divId, param.filters);
+			if (fIdx >= 0 && param.filters[fIdx].value == d.label) {
+				d3.select(this)
+					.select("path")
+					.attr({'fill': attr.mouseoverColor, 'stroke-width': 1, 'stroke': "#444"});
+				d3.select(this)
+					.transition().duration(duration)
+					.attr("transform","translate(" + (outerRadius+30+Math.sin((d.startAngle+d.endAngle)/2)*20) + "," 
+												   + (outerRadius+30+Math.cos((d.startAngle+d.endAngle)/2)*(-20)) + ")");
+			}else{
+				d3.select(this)
+					.select("path")
+					.attr({'fill': color(i), 'stroke-width': 1, 'stroke': "#ddd"});
+				d3.select(this)
+					.transition().duration(duration)
+					.attr("transform","translate(" + (outerRadius+30) + "," + (outerRadius+30) + ")");
+			}
+		})
+		.on("mouseover",function(d,i){
+			showTip(this, d.label + "<br>" + d.value);
+			if (getFilterById(divId, param.filters) >= 0) return;
+			d3.select(this).select("path")
+				.attr("fill", attr.mouseoverColor);
+		})
+		.on("mouseout",function(d,i){
+			hideTip();
+			if (getFilterById(divId, param.filters) >= 0) return;
+			d3.select(this).select("path")
+				.attr("fill", color(i));
+		})
+		.on("click", function(d,i){
+			doFilter(this, divId, param, origData, xField, d.label);
+		});
+	
+	svg.selectAll("g")
+		.data(ddd)
+		.exit()
+		.remove();
+		
+} // yableau.pie()
+
+//------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+console.log("define yableau.sankey");
+
+yableau.sankey = function(divId, origData, xField, yField, param, attr){
 
 	var width  = parseInt(d3.select(divId).style("width"));
 	var height = parseInt(d3.select(divId).style("height"));
@@ -698,13 +862,13 @@ yableau.pie = function(divId, origData, xField, yField, param, attr){
 		if (fIdx >= 0 && param.filters[fIdx].value == d.label) {
 			d3.select(this).attr({'fill': attr.mouseoverColor, 'stroke-width': 1, 'stroke': "#444"});
 			d3.select(this)
-				.transition()
+				.transition().duration(duration)
 				.attr("transform","translate(" + Math.sin((d.startAngle+d.endAngle)/2)*20 + "," 
 											   + Math.cos((d.startAngle+d.endAngle)/2)*(-20) + ")");
 		}else{
 			d3.select(this).attr({'fill': color(i), 'stroke-width': 1, 'stroke': "#ddd"});
 			d3.select(this)
-				//.transition()
+				//.transition().duration(duration)
 				.attr("transform","translate(" + 0 + "," + 0 + ")");
 		}
 	})
@@ -747,11 +911,7 @@ yableau.pie = function(divId, origData, xField, yField, param, attr){
 		.exit()
 		.remove();
 		
-} // yableau.pie()
-
-//------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------
-
+} // yableau.sankey()
 
 //------------------------------------------------------------------------------------------
 
