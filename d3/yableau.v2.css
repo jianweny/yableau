@@ -1,0 +1,144 @@
+/*CSS for D3.*/
+
+svg {
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+div.svg table.svg  tr.odd {
+	background: #fff;
+}
+div.svg table.svg  {
+	font-size: 10px;
+	text-align: center;
+}
+div.svg table.svg  tr.even {
+	background: #f0f0f0;
+}
+
+
+svg text {
+	pointer-events: none;
+	font-size: 11px;
+}
+
+svg text.svg_title {
+	font-size: 16px;
+	text-anchor: middle;
+}
+svg text.svg_subtitle {
+	font-size: 12px;
+	text-anchor: middle;
+}
+
+svg g.icons g.icon text {
+	font-size: 10px;
+}
+
+
+svg .bgRect {
+	fill: #FFF;
+	stroke-width: 2;
+	stroke: #eee;
+}
+
+path.curve {
+	fill: none;
+	stroke-width: 1;
+	stroke: blue;
+	stroke-opacity: 0.9;
+}
+
+path.area {
+	fill: blue;
+	opacity: 0.8;
+	stroke-width: 1;
+	stroke: blue;
+	stroke-opacity: 0.9;
+}
+
+circle.col1 {
+	fill: blue;
+	stroke-width: 2;
+	stroke: #fff;
+}
+
+circle.col2 {
+	fill: #fff;
+	stroke-width: 0;
+}
+
+path.domain {
+	fill: none;
+	stroke: #888;
+	stroke-width:1;
+	shape-rendering: crispEdges;
+}
+.tick line {
+	stroke: #888;
+	stroke-width:1;
+	shape-rendering: crispEdges;
+	pointer-events: none;
+}
+
+.yAxis2 .tick line {
+  stroke: #000;
+  stroke-opacity: 0.1;
+  stroke-dasharray: 4,2;
+  shape-rendering: crispEdges;
+}
+
+line.hori_zero{
+	stroke: #888;
+	opacity: 0.3;
+	stroke-width:1;
+	shape-rendering: crispEdges;
+	pointer-events: none;
+}
+
+/* for Sankey */
+.node rect {
+  cursor: move;
+  fill-opacity: .9;
+  shape-rendering: crispEdges;
+}
+.node text {
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff;
+}
+.link {
+  fill: none;
+  stroke: #ccc;
+  /*stroke-opacity: .2;*/
+}
+.link:hover {
+  /*stroke-opacity: .5;*/
+}	
+#tooltip.hidden {
+	display: none;
+}
+
+/* for tootip */
+
+#tooltip {
+	position: absolute;
+	min-width: 50px;
+	/*max-width: 300px;*/
+	height: auto;
+	padding: 10px;
+	background-color: white;
+	-webkit-border-radius: 6px;
+	-moz-border-radius: 6px;
+	border-radius: 6px;
+	-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+	zindex:9999;
+}
+#tooltip p {
+	margin: 0;
+	font-family: sans-serif;
+	font-size: 14px;
+	line-height: 20px;
+}
